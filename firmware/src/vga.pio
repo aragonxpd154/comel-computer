@@ -1,0 +1,67 @@
+;
+; COMEL — saída VGA 640×480 a 60 Hz para a placa COMEL (DAC RGB332 em GP6–GP13,
+; HSYNC em GP14, VSYNC em GP15). GPL-3.0.
+;
+; As três máquinas rodam no relógio de pixel (25,2 MHz = 252 MHz / 10).
+; Cada pixel do C64 dura 2 pixels VGA (320 → 640) e cada linha do quadro de
+; 320×240 é enviada duas vezes pelo DMA (240 → 480).
+;
+; Ordem das linhas de um quadro (525 linhas):
+;   32 linhas de pórtico traseiro em que o RGB recebe uma linha preta (o DMA
+;   precisa de uma lista de 512 = 2^9 linhas para dar a volta sozinho),
+;   480 linhas visíveis, 10 de pórtico dianteiro, 2 de VSYNC, 1 de pórtico traseiro.
+
+; ---------------------------------------------------------------------------
+; HSYNC: 656 pixels em nível alto (visível + pórtico dianteiro), 96 em nível
+; baixo (pulso), 48 em nível alto (pórtico traseiro). Total 800.
+; Antes do fim do pórtico traseiro avisa a máquina do VSYNC (irq 0).
+.program vga_hsync
+    pull block                  ; x0 = 654
+.wrap_target
+    mov x, osr
+active:
+    jmp x-- active              ; 656 ciclos junto com o mov
+    set pins, 0 [31]
+    set pins, 0 [31]
+    set pins, 0 [31]            ; 96 ciclos de pulso
+    set pins, 1 [31]
+    irq 0       [15]            ; 48 ciclos de pórtico traseiro
+.wrap
+
+; ---------------------------------------------------------------------------
+; VSYNC: conta as linhas (cada irq 0 é uma linha) e libera a máquina do RGB
+; (irq 1) nas 512 linhas que recebem dados do DMA.
+.program vga_vsync
+    pull block                  ; 511
+.wrap_target
+    mov x, osr
+lines:
+    wait 1 irq 0
+    irq 1
+    jmp x-- lines               ; 32 de pórtico + 480 visíveis
+    set y, 9
+front:
+    wait 1 irq 0
+    jmp y-- front               ; 10 de pórtico dianteiro
+    set pins, 0
+    wait 1 irq 0
+    wait 1 irq 0                ; 2 linhas de VSYNC
+    set pins, 1
+    wait 1 irq 0                ; 1 linha de pórtico traseiro
+.wrap
+
+; ---------------------------------------------------------------------------
+; RGB: espera o início da linha e solta 324 pixels de 8 bits, 2 ciclos cada.
+; Os 4 últimos pixels de cada linha do quadro são pretos, então o pino fica
+; preto durante o apagamento horizontal.
+.program vga_rgb
+    pull block                  ; 323
+    mov y, osr
+    out null, 32                ; esvazia o OSR (autopull a partir daqui)
+.wrap_target
+    mov x, y
+    wait 1 irq 1 [11]           ; alinha o primeiro pixel com o início da área visível
+pixel:
+    out pins, 8
+    jmp x-- pixel
+.wrap

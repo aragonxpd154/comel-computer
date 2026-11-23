@@ -1,0 +1,14 @@
+COMEL — como usar este pacote
+=============================
+
+1. Ver o projeto:      abra docs/3d/viewer.html no navegador (funciona offline)
+                       ou o README.md (fica completo no GitHub).
+2. Mandar fabricar:    hardware/comel/fab/comel-gerbers.zip   (placa única, 132 × 64 mm)
+                       BOM e posição: hardware/comel/fab/
+3. Cortar a carcaça:   case/saida/chapa-1.dxf e chapa-2.dxf (ou .svg)
+                       Antes: python3 case/gerar_carcaca.py --kerf 0.15 (troque pelo kerf do seu laser)
+4. Gravar o firmware:  segure BOOTSEL no Pico 2, ligue no USB e copie firmware/bin/comel.uf2
+                       Cartão microSD: pasta /c64 com os .prg (detalhes em firmware/README.md)
+5. Abrir no KiCad 7:   hardware/comel/comel.kicad_pro
+6. Publicar no GitHub: bash publicar-no-github.sh
+7. Regenerar tudo:     make setup  e depois  make all

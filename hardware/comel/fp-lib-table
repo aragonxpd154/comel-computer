@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "COMEL")(type "KiCad")(uri "${KIPRJMOD}/../lib/COMEL.pretty")(options "")(descr "Footprints do projeto COMEL"))
+)

@@ -1,0 +1,11 @@
+{
+  "name": "comel-viewer",
+  "private": true,
+  "type": "module",
+  "description": "Visualizador 3D da placa COMEL e da montagem na carcaça",
+  "scripts": {
+    "build": "node build.mjs ../../.. ./node_modules",
+    "shoot": "node shoot.mjs ../../.."
+  },
+  "dependencies": { "three": "0.160.0", "esbuild": "0.20.2" }
+}
